@@ -1,10 +1,32 @@
 import streamlit as st
 import speech_recognition as sr
+from twilio.rest import Client
 
 # --- Page Setup ---
 st.set_page_config(page_title="Next-Gen Smart Home AI", layout="wide")
 
-# --- Enhanced Realistic CSS (EXACTLY AS PER YOUR SCREENSHOT) ---
+# --- Notification Logic ---
+def send_notification(room_name):
+    """Sends an SMS notification via Twilio when a room is activated."""
+    try:
+        # Pulling credentials from Streamlit Cloud Secrets for security
+        account_sid = st.secrets["TWILIO_ACCOUNT_SID"]
+        auth_token = st.secrets["TWILIO_AUTH_TOKEN"]
+        twilio_number = st.secrets["TWILIO_PHONE_NUMBER"]
+        my_number = st.secrets["MY_PERSONAL_NUMBER"]
+        
+        client = Client(account_sid, auth_token)
+
+        client.messages.create(
+            body=f"Next-Gen AI: Your {room_name} light is now ON. 💡",
+            from_=twilio_number,
+            to=my_number
+        )
+    except Exception as e:
+        # Silent fail or small warning if secrets are missing during setup
+        st.toast(f"Notification pending... (Check Twilio Secrets)")
+
+# --- Enhanced Realistic CSS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Inter:wght@300;500&display=swap');
@@ -74,7 +96,6 @@ st.markdown("""
         box-shadow: 0 0 15px #39FF14;
     }
 
-    /* Hiding the redundant Streamlit audio player widget elements */
     div[data-testid="stAudio"] { display: none; }
 </style>
 """, unsafe_allow_html=True)
@@ -87,7 +108,7 @@ if 'active_room' not in st.session_state:
 st.markdown('<h1 class="main-title">AI HOME CONTROL CENTER</h1>', unsafe_allow_html=True)
 
 # --- Integrated Voice Engine ---
-# Replacing st.button and sr.Microphone() with st.audio_input for mobile/PWA compatibility.
+# Using st.audio_input for PWA/Mobile mic compatibility
 voice_input = st.audio_input("ACTIVATE VOICE INTERFACE", label_visibility="visible")
 
 if voice_input:
@@ -96,18 +117,30 @@ if voice_input:
         try:
             audio = r.record(source)
             text = r.recognize_google(audio).lower()
+            st.toast(f"System: {text.upper()}")
             
-            # Update Dashboard State immediately based on text
-            if "hall" in text or "lounge" in text: st.session_state.active_room = "hall"
-            elif "bedroom" in text or "sleep" in text: st.session_state.active_room = "bedroom"
-            elif "kitchen" in text: st.session_state.active_room = "kitchen"
-            elif "dining" in text: st.session_state.active_room = "dining"
-            elif "off" in text or "standby" in text: st.session_state.active_room = "none"
-            
-            st.toast(f"System: {text.upper()}") # Small non-intrusive text feedback
+            # Integrated Logic for State Update and Mobile Notification
+            if "hall" in text or "lounge" in text: 
+                st.session_state.active_room = "hall"
+                send_notification("MAIN LOUNGE")
+                
+            elif "bedroom" in text or "sleep" in text: 
+                st.session_state.active_room = "bedroom"
+                send_notification("SLEEP SUITE")
+                
+            elif "kitchen" in text: 
+                st.session_state.active_room = "kitchen"
+                send_notification("CULINARY HUB")
+                
+            elif "dining" in text: 
+                st.session_state.active_room = "dining"
+                send_notification("DINING SPACE")
+                
+            elif "off" in text or "standby" in text: 
+                st.session_state.active_room = "none"
             
         except Exception:
-            st.error("Audio processing failed.")
+            st.error("Audio processing failed. Please try again.")
 
 # --- Dashboard Layout ---
 rooms = [
