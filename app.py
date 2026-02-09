@@ -4,7 +4,7 @@ import speech_recognition as sr
 # --- Page Setup ---
 st.set_page_config(page_title="Next-Gen Smart Home AI", layout="wide")
 
-# --- Enhanced Realistic CSS (UNTOUCHED) ---
+# --- Enhanced Realistic CSS (Your Original Styles) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Inter:wght@300;500&display=swap');
@@ -70,11 +70,13 @@ st.markdown("""
 
     .room-card:hover .icon-style { transform: scale(1.1) rotate(5deg); }
 
+    /* Room-Specific Neon Glows */
     .hall-active { border-color: #ffcc00; box-shadow: 0 0 30px rgba(255, 204, 0, 0.4), inset 0 0 20px rgba(255, 204, 0, 0.1); }
     .bedroom-active { border-color: #00d4ff; box-shadow: 0 0 30px rgba(0, 212, 255, 0.4), inset 0 0 20px rgba(0, 212, 255, 0.1); }
     .kitchen-active { border-color: #00ff88; box-shadow: 0 0 30px rgba(0, 255, 136, 0.4), inset 0 0 20px rgba(0, 255, 136, 0.1); }
     .dining-active { border-color: #ff4d4d; box-shadow: 0 0 30px rgba(255, 77, 77, 0.4), inset 0 0 20px rgba(255, 77, 77, 0.1); }
 
+    /* Animated Power Button Refined */
     .power-btn {
         width: 65px; height: 65px;
         border-radius: 50%;
@@ -105,11 +107,19 @@ st.markdown("""
         to { opacity: 1; transform: scale(1.2); }
     }
 
-    /* Voice Trigger Button (Targeting the st.audio_input widget) */
+    /* Style for the Voice Widget to match your UI */
+    div[data-testid="stAudioInput"] {
+        padding: 10px;
+        background: transparent;
+    }
+    
     div[data-testid="stAudioInput"] button {
         background: linear-gradient(45deg, #00f2ff, #0062ff) !important;
-        color: white !important;
         border-radius: 50px !important;
+        color: white !important;
+        border: none !important;
+        padding: 15px 30px !important;
+        font-weight: bold !important;
         box-shadow: 0 10px 20px rgba(0, 98, 255, 0.3) !important;
     }
 </style>
@@ -122,8 +132,8 @@ if 'active_room' not in st.session_state:
 # --- UI Structure ---
 st.markdown('<h1 class="main-title">AI HOME CONTROL CENTER</h1>', unsafe_allow_html=True)
 
-# --- NEW DEBUGGED VOICE INTERFACE (Phone Compatible) ---
-# This widget is the ONLY way to avoid OSError on mobile
+# --- FIXED VOICE INTERFACE (Works on Mobile) ---
+# This replaces the st.button and sr.Microphone() block
 audio_data = st.audio_input("ACTIVATE VOICE INTERFACE", label_visibility="collapsed")
 
 if audio_data:
@@ -132,21 +142,22 @@ if audio_data:
         try:
             audio = r.record(source)
             text = r.recognize_google(audio).lower()
-            st.toast(f"Recognized: {text}")
+            st.toast(f"🎤 Command: {text}")
             
+            # Control Logic
             if "hall" in text or "lounge" in text: st.session_state.active_room = "hall"
             elif "bedroom" in text or "sleep" in text: st.session_state.active_room = "bedroom"
             elif "kitchen" in text or "culinary" in text: st.session_state.active_room = "kitchen"
             elif "dining" in text: st.session_state.active_room = "dining"
             elif "off" in text or "stop" in text: st.session_state.active_room = "none"
             
-            # Rerun to update the dashboard immediately
-            st.rerun()
+            # Forces the UI to update cards immediately
+            st.rerun() 
             
         except Exception:
-            st.error("Audio not captured or recognized.")
+            st.error("Audio not captured correctly.")
 
-# --- Dashboard Layout (UNTOUCHED) ---
+# --- Dashboard Grid (Your Original Structure) ---
 rooms = [
     {"id": "hall", "name": "MAIN LOUNGE", "icon": "🛋️", "class": "hall-active"},
     {"id": "bedroom", "name": "SLEEP SUITE", "icon": "🛏️", "class": "bedroom-active"},
