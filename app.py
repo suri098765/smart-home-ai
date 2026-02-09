@@ -75,25 +75,25 @@ st.markdown('<h1 class="main-title">AI HOME CONTROL CENTER</h1>', unsafe_allow_h
 # --- Replace your old 'Activate' button logic with this ---
 
 # This creates the browser-compatible mic that avoids the OSError
-audio_data = st.audio_input("ACTIVATE VOICE INTERFACE", label_visibility="collapsed")
+audio_data = st.audio_input("Activate Voice Interface")
 
 if audio_data:
-    # This block runs automatically as soon as the audio is ready
+    st.info("Processing your command...")
+    
+    # Use the SpeechRecognition library to read the captured file
     r = sr.Recognizer()
     with sr.AudioFile(audio_data) as source:
         audio = r.record(source)
         try:
-            # Converts your voice to text immediately
-            command = r.recognize_google(audio)
-            st.success(f"Command Received: {command}")
+            # Convert speech to text
+            text = r.recognize_google(audio)
+            st.success(f"Command Received: {text}")
             
-            # Logic to control your UI cards
-            if "lounge" in command.lower():
-                st.write("Adjusting Main Lounge...")
-            elif "sleep" in command.lower():
-                st.write("Adjusting Sleep Suite...")
+            # Add your logic here, for example:
+            if "lounge" in text.lower():
+                st.write("Adjusting Main Lounge settings...")
                 
-        except Exception:
+        except Exception as e:
             st.error("Could not understand the audio. Please try again.")
 
 # --- Dashboard Display ---
@@ -119,4 +119,5 @@ for i, room in enumerate(rooms):
             </p>
         </div>
         """, unsafe_allow_html=True)
+
 
