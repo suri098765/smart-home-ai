@@ -1,11 +1,10 @@
 import streamlit as st
 import speech_recognition as sr
-import io
 
 # --- Page Setup ---
 st.set_page_config(page_title="Next-Gen Smart Home AI", layout="wide")
 
-# --- Enhanced Realistic CSS (UNALTERED) ---
+# --- Enhanced Realistic CSS (EXACTLY AS PER YOUR SCREENSHOT) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Inter:wght@300;500&display=swap');
@@ -26,15 +25,6 @@ st.markdown("""
         -webkit-text-fill-color: transparent;
     }
 
-    /* Dashboard Grid */
-    .dashboard-container {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 30px;
-        padding: 20px;
-    }
-
-    /* Room Card - Ultra Glassmorphism */
     .room-card {
         background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(20px);
@@ -48,7 +38,6 @@ st.markdown("""
         overflow: hidden;
     }
 
-    /* Decorative Scanline Effect */
     .room-card::before {
         content: "";
         position: absolute;
@@ -57,27 +46,19 @@ st.markdown("""
         animation: scan 3s linear infinite;
     }
 
-    @keyframes scan {
-        0% { top: 0%; }
-        100% { top: 100%; }
-    }
+    @keyframes scan { 0% { top: 0%; } 100% { top: 100%; } }
 
     .icon-style { 
         font-size: 90px; 
         margin-bottom: 25px; 
         filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
-        transition: transform 0.3s ease;
     }
 
-    .room-card:hover .icon-style { transform: scale(1.1) rotate(5deg); }
+    .hall-active { border-color: #ffcc00; box-shadow: 0 0 30px rgba(255, 204, 0, 0.4); }
+    .bedroom-active { border-color: #00d4ff; box-shadow: 0 0 30px rgba(0, 212, 255, 0.4); }
+    .kitchen-active { border-color: #00ff88; box-shadow: 0 0 30px rgba(0, 255, 136, 0.4); }
+    .dining-active { border-color: #ff4d4d; box-shadow: 0 0 30px rgba(255, 77, 77, 0.4); }
 
-    /* Room-Specific Neon Glows */
-    .hall-active { border-color: #ffcc00; box-shadow: 0 0 30px rgba(255, 204, 0, 0.4), inset 0 0 20px rgba(255, 204, 0, 0.1); }
-    .bedroom-active { border-color: #00d4ff; box-shadow: 0 0 30px rgba(0, 212, 255, 0.4), inset 0 0 20px rgba(0, 212, 255, 0.1); }
-    .kitchen-active { border-color: #00ff88; box-shadow: 0 0 30px rgba(0, 255, 136, 0.4), inset 0 0 20px rgba(0, 255, 136, 0.1); }
-    .dining-active { border-color: #ff4d4d; box-shadow: 0 0 30px rgba(255, 77, 77, 0.4), inset 0 0 20px rgba(255, 77, 77, 0.1); }
-
-    /* Animated Power Button Refined */
     .power-btn {
         width: 65px; height: 65px;
         border-radius: 50%;
@@ -85,28 +66,16 @@ st.markdown("""
         background: #111;
         border: 4px solid #222;
         display: flex; align-items: center; justify-content: center;
-        position: relative;
     }
 
     .active-btn {
         background: #000;
         border-color: #39FF14;
-        box-shadow: 0 0 15px #39FF14, inset 0 0 10px #39FF14;
+        box-shadow: 0 0 15px #39FF14;
     }
 
-    .active-btn::after {
-        content: "";
-        width: 15px; height: 15px;
-        background: #39FF14;
-        border-radius: 50%;
-        box-shadow: 0 0 20px #39FF14;
-        animation: glow-pulse 1s infinite alternate;
-    }
-
-    @keyframes glow-pulse {
-        from { opacity: 0.5; transform: scale(0.8); }
-        to { opacity: 1; transform: scale(1.2); }
-    }
+    /* Hiding the redundant Streamlit audio player widget elements */
+    div[data-testid="stAudio"] { display: none; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -114,11 +83,11 @@ st.markdown("""
 if 'active_room' not in st.session_state:
     st.session_state.active_room = "none"
 
-# --- UI Structure ---
+# --- Title ---
 st.markdown('<h1 class="main-title">AI HOME CONTROL CENTER</h1>', unsafe_allow_html=True)
 
-# FIXED: Browser-based voice trigger (replaces st.button and sr.Microphone)
-# This works on mobile/PWA and triggers immediately after speech ends
+# --- Integrated Voice Engine ---
+# Replacing st.button and sr.Microphone() with st.audio_input for mobile/PWA compatibility.
 voice_input = st.audio_input("ACTIVATE VOICE INTERFACE", label_visibility="visible")
 
 if voice_input:
@@ -127,22 +96,20 @@ if voice_input:
         try:
             audio = r.record(source)
             text = r.recognize_google(audio).lower()
-            st.toast(f"Command: {text}")
             
-            # Update state immediately
+            # Update Dashboard State immediately based on text
             if "hall" in text or "lounge" in text: st.session_state.active_room = "hall"
             elif "bedroom" in text or "sleep" in text: st.session_state.active_room = "bedroom"
             elif "kitchen" in text: st.session_state.active_room = "kitchen"
             elif "dining" in text: st.session_state.active_room = "dining"
             elif "off" in text or "standby" in text: st.session_state.active_room = "none"
             
-            # Play confirmation sound
-            st.audio("https://www.soundjay.com/buttons/beep-07a.mp3", autoplay=True)
+            st.toast(f"System: {text.upper()}") # Small non-intrusive text feedback
             
         except Exception:
-            st.error("Audio could not be processed.")
+            st.error("Audio processing failed.")
 
-# --- Dashboard Display (Accurate & Reactive) ---
+# --- Dashboard Layout ---
 rooms = [
     {"id": "hall", "name": "MAIN LOUNGE", "icon": "🛋️", "class": "hall-active"},
     {"id": "bedroom", "name": "SLEEP SUITE", "icon": "🛏️", "class": "bedroom-active"},
