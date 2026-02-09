@@ -25,6 +25,15 @@ st.markdown("""
         -webkit-text-fill-color: transparent;
     }
 
+    /* Dashboard Grid */
+    .dashboard-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px;
+        padding: 20px;
+    }
+
+    /* Room Card - Ultra Glassmorphism */
     .room-card {
         background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(20px);
@@ -36,67 +45,108 @@ st.markdown("""
         transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         position: relative;
         overflow: hidden;
-        margin-bottom: 20px;
     }
 
-    .icon-style { font-size: 70px; margin-bottom: 20px; }
+    /* Decorative Scanline Effect */
+    .room-card::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 2px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        animation: scan 3s linear infinite;
+    }
 
-    /* Neon Glows */
-    .hall-active { border-color: #ffcc00; box-shadow: 0 0 30px rgba(255, 204, 0, 0.4); }
-    .bedroom-active { border-color: #00d4ff; box-shadow: 0 0 30px rgba(0, 212, 255, 0.4); }
-    .kitchen-active { border-color: #00ff88; box-shadow: 0 0 30px rgba(0, 255, 136, 0.4); }
-    .dining-active { border-color: #ff4d4d; box-shadow: 0 0 30px rgba(255, 77, 77, 0.4); }
+    @keyframes scan {
+        0% { top: 0%; }
+        100% { top: 100%; }
+    }
 
+    .icon-style { 
+        font-size: 90px; 
+        margin-bottom: 25px; 
+        filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+        transition: transform 0.3s ease;
+    }
+
+    .room-card:hover .icon-style { transform: scale(1.1) rotate(5deg); }
+
+    /* Room-Specific Neon Glows */
+    .hall-active { border-color: #ffcc00; box-shadow: 0 0 30px rgba(255, 204, 0, 0.4), inset 0 0 20px rgba(255, 204, 0, 0.1); }
+    .bedroom-active { border-color: #00d4ff; box-shadow: 0 0 30px rgba(0, 212, 255, 0.4), inset 0 0 20px rgba(0, 212, 255, 0.1); }
+    .kitchen-active { border-color: #00ff88; box-shadow: 0 0 30px rgba(0, 255, 136, 0.4), inset 0 0 20px rgba(0, 255, 136, 0.1); }
+    .dining-active { border-color: #ff4d4d; box-shadow: 0 0 30px rgba(255, 77, 77, 0.4), inset 0 0 20px rgba(255, 77, 77, 0.1); }
+
+    /* Animated Power Button Refined */
     .power-btn {
-        width: 40px; height: 40px;
+        width: 65px; height: 65px;
         border-radius: 50%;
-        margin: 20px auto 0;
+        margin: 30px auto 0;
         background: #111;
-        border: 3px solid #222;
+        border: 4px solid #222;
+        display: flex; align-items: center; justify-content: center;
+        position: relative;
     }
 
     .active-btn {
-        background: #39FF14;
-        box-shadow: 0 0 15px #39FF14;
-        border-color: #ffffff;
+        background: #000;
+        border-color: #39FF14;
+        box-shadow: 0 0 15px #39FF14, inset 0 0 10px #39FF14;
     }
+
+    .active-btn::after {
+        content: "";
+        width: 15px; height: 15px;
+        background: #39FF14;
+        border-radius: 50%;
+        box-shadow: 0 0 20px #39FF14;
+        animation: glow-pulse 1s infinite alternate;
+    }
+
+    @keyframes glow-pulse {
+        from { opacity: 0.5; transform: scale(0.8); }
+        to { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* Voice Trigger Button */
+    .stButton > button {
+        background: linear-gradient(45deg, #00f2ff, #0062ff);
+        color: white; border: none; padding: 15px 30px;
+        border-radius: 50px; font-weight: bold;
+        box-shadow: 0 10px 20px rgba(0, 98, 255, 0.3);
+        transition: 0.3s;
+    }
+    .stButton > button:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(0, 98, 255, 0.5); }
 </style>
 """, unsafe_allow_html=True)
 
-# --- State Management ---
+# --- Logic & Voice Engine (Keeping Your State Management) ---
 if 'active_room' not in st.session_state:
     st.session_state.active_room = "none"
+
+def process_voice():
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        st.toast("🎤 System Listening...")
+        try:
+            r.adjust_for_ambient_noise(source, duration=0.5)
+            audio = r.listen(source, timeout=5, phrase_time_limit=4)
+            text = r.recognize_google(audio).lower()
+            
+            if "hall" in text: st.session_state.active_room = "hall"
+            elif "bedroom" in text: st.session_state.active_room = "bedroom"
+            elif "kitchen" in text: st.session_state.active_room = "kitchen"
+            elif "dining" in text: st.session_state.active_room = "dining"
+            elif "off" in text: st.session_state.active_room = "none"
+            
+        except Exception:
+            st.error("Audio not captured.")
 
 # --- UI Structure ---
 st.markdown('<h1 class="main-title">AI HOME CONTROL CENTER</h1>', unsafe_allow_html=True)
 
-# --- MOBILE VOICE INTERFACE ---
-# This widget is the key to fixing the error on your phone
-# --- Replace your old 'Activate' button logic with this ---
+if st.button("ACTIVATE VOICE INTERFACE", use_container_width=True):
+    process_voice()
 
-# This creates the browser-compatible mic that avoids the OSError
-audio_data = st.audio_input("Activate Voice Interface")
-
-if audio_data:
-    st.info("Processing your command...")
-    
-    # Use the SpeechRecognition library to read the captured file
-    r = sr.Recognizer()
-    with sr.AudioFile(audio_data) as source:
-        audio = r.record(source)
-        try:
-            # Convert speech to text
-            text = r.recognize_google(audio)
-            st.success(f"Command Received: {text}")
-            
-            # Add your logic here, for example:
-            if "lounge" in text.lower():
-                st.write("Adjusting Main Lounge settings...")
-                
-        except Exception as e:
-            st.error("Could not understand the audio. Please try again.")
-
-# --- Dashboard Display ---
 rooms = [
     {"id": "hall", "name": "MAIN LOUNGE", "icon": "🛋️", "class": "hall-active"},
     {"id": "bedroom", "name": "SLEEP SUITE", "icon": "🛏️", "class": "bedroom-active"},
@@ -112,12 +162,10 @@ for i, room in enumerate(rooms):
         st.markdown(f"""
         <div class="room-card {room['class'] if active else ''}">
             <div class="icon-style">{room['icon']}</div>
-            <h3 style="font-family: 'Inter'; color: white;">{room['name']}</h3>
+            <h3 style="font-family: 'Inter'; letter-spacing: 2px; font-weight: 300;">{room['name']}</h3>
             <div class="power-btn {'active-btn' if active else ''}"></div>
-            <p style="color: {'#39FF14' if active else '#555'}; font-size: 0.8rem;">
-                {'● ACTIVE' if active else '○ STANDBY'}
+            <p style="margin-top: 15px; font-size: 0.8rem; color: {'#39FF14' if active else '#555'};">
+                {'● POWER ACTIVE' if active else '○ STANDBY'}
             </p>
         </div>
         """, unsafe_allow_html=True)
-
-
