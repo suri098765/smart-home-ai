@@ -72,25 +72,29 @@ st.markdown('<h1 class="main-title">AI HOME CONTROL CENTER</h1>', unsafe_allow_h
 
 # --- MOBILE VOICE INTERFACE ---
 # This widget is the key to fixing the error on your phone
-audio_data = st.audio_input("ACTIVATE VOICE INTERFACE")
+# --- Replace your old 'Activate' button logic with this ---
+
+# This creates the browser-compatible mic that avoids the OSError
+audio_data = st.audio_input("ACTIVATE VOICE INTERFACE", label_visibility="collapsed")
 
 if audio_data:
+    # This block runs automatically as soon as the audio is ready
     r = sr.Recognizer()
     with sr.AudioFile(audio_data) as source:
+        audio = r.record(source)
         try:
-            audio = r.record(source)
-            text = r.recognize_google(audio).lower()
-            st.toast(f"Recognized: {text}")
+            # Converts your voice to text immediately
+            command = r.recognize_google(audio)
+            st.success(f"Command Received: {command}")
             
-            # Logic to switch rooms based on voice
-            if "hall" in text or "lounge" in text: st.session_state.active_room = "hall"
-            elif "bedroom" in text or "sleep" in text: st.session_state.active_room = "bedroom"
-            elif "kitchen" in text: st.session_state.active_room = "kitchen"
-            elif "dining" in text: st.session_state.active_room = "dining"
-            elif "off" in text or "stop" in text: st.session_state.active_room = "none"
-            
+            # Logic to control your UI cards
+            if "lounge" in command.lower():
+                st.write("Adjusting Main Lounge...")
+            elif "sleep" in command.lower():
+                st.write("Adjusting Sleep Suite...")
+                
         except Exception:
-            st.error("Could not process voice command.")
+            st.error("Could not understand the audio. Please try again.")
 
 # --- Dashboard Display ---
 rooms = [
@@ -115,3 +119,4 @@ for i, room in enumerate(rooms):
             </p>
         </div>
         """, unsafe_allow_html=True)
+
